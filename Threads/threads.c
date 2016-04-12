@@ -18,7 +18,6 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 
-
 int buffer[MAX_N_SIZE][MAX_BUFFER_SIZE];
 /* other global variable instantiations can go here */
 
@@ -36,7 +35,17 @@ void BruteForceSort(int inputList[], int inputLength) {
   }
 }
 
+long int runTime(struct timeval startTime) {
+  long int elapsedTime = 0;
+  struct timeval endTime;
+  gettimeofday(&endTime, NULL);
+  elapsedTime = endTime.tv_sec - startTime.tv_sec;
+  elapsedTime += endTime.tv_usec - startTime.tv_usec;
+  return elapsedTime;
+}
+
 void *BruteForceHelper(void* ptr) {
+  printf("starting BruteForceHelper\n");
   Interval* inv = (Interval*) ptr;
   int inputLength = (*inv).end - (*inv).start;
   int *input = malloc(inputLength);
@@ -45,17 +54,9 @@ void *BruteForceHelper(void* ptr) {
   memcpy(input, ((*inv).costPointer + (*inv).start), inputLength);
   BruteForceSort(input, inputLength);
   free(input);
-  return runTime(startTime);
+  return (void *) runTime(startTime);
 }
 
-long int runTime(struct timveval startTime) {
-  long int elapsedTime = 0;
-  struct timeval endTime;
-  gettimeofday(&endTime);
-  elapsedTime = endTime.tv_sec - startTime.tv_sec;
-  elapsedTime += endTime.tv_usec - startTime.tv_usec;
-  return elapsedTime;
-}
 
 /* Uses the bubble sort method of sorting the input list. */
 void BubbleSort(int inputList[], int inputLength) {
@@ -74,6 +75,7 @@ void BubbleSort(int inputList[], int inputLength) {
   }
 }
 void *BubbleHelper(void* ptr) {
+  printf("starting BubbleSortHelper\n");
   Interval* inv = (Interval*) ptr;
   int inputLength = (*inv).end - (*inv).start;
   int *input = malloc(inputLength);
@@ -82,7 +84,7 @@ void *BubbleHelper(void* ptr) {
   memcpy(input, ((*inv).costPointer + (*inv).start), inputLength);
   BubbleSort(input, inputLength);
   free(input);
-  return runTime(startTime);
+  return (void *) runTime(startTime);
 }
 
 /* Sudo merges two arrays.  Instead of having two arrays as input, it
@@ -118,6 +120,7 @@ void MergeSort(int *array, int left, int right) {
 }
 
 void *MergeHelper(void* ptr) {
+  printf("starting mergesorthelper\n");
   Interval* inv = (Interval*) ptr;
   int inputLength = (*inv).end - (*inv).start;
   int *input = malloc(inputLength);
@@ -126,51 +129,9 @@ void *MergeHelper(void* ptr) {
   memcpy(input, ((*inv).costPointer + (*inv).start), inputLength);
   MergeSort(input, (*inv).start, (*inv).end);
   free(input);
-  return runTime(startTime);
+  return (void *) runTime(startTime);
 }
-/* Merges the sorted files into an output file using the two
- * dimensional output buffer */
-/*void MergeAndOutputBuffer(char* outputFile) {
-  FILE *outFile = fopen(outputFile, "w");
-  if (outFile == NULL) {
-    fprintf(stderr, "Unable to open the file %s\n", outputFile);
-    exit(2);
-  }
-  int i;
-  int64_t j;
-  int indexes[MAX_N_SIZE], maxIndexes[MAX_N_SIZE];
-  for (i = 0; i < n; i++) {
-    for (j = 0; buffer[i][j] > 0; j++) {
-    }
-    maxIndexes[i] = j;
-    indexes[i] = 0;
-  }
-  int smallIndex;
-  j = 0;
-  while (1) {
-    smallIndex = -1;
-    for (i = 0; i < n; i++) {
-      if (indexes[i] < maxIndexes[i]) {
-        smallIndex = i;
-        break;
-      }
-    }
-    if (smallIndex == -1) {
-      break;
-    }
-    for (i = 1; i < n; i++) {
-      if ((indexes[i] < maxIndexes[i]) &&
-          (buffer[i][indexes[i]] < buffer[smallIndex][indexes[smallIndex]])) {
-        smallIndex = i;
-      }
-    }
-    fprintf(outFile, "%d\n", buffer[smallIndex][indexes[smallIndex]]);
-    fflush(outFile);
-    indexes[smallIndex]++;
-    j++;
-  }
-  fclose(outFile);
-}*/
+
 
 void findMax(long int *array, int length) {
   int i = 0;
@@ -207,7 +168,8 @@ int main(int argc, char* argv[]) {
   pthread_t* tid;
   FILE *fileIn, *fileOut;
   if (argc != 4) {
-    fprintf(stderr, "Incorrect number of arguments - proper number of arguments is 3.");
+    fprintf(stderr, "Incorrect number of arguments - proper number of arguments is 3.\n");
+    return 0;
   }
   numThread = atoi(argv[1]);
   fileIn = fopen(argv[2], "r");
@@ -215,20 +177,25 @@ int main(int argc, char* argv[]) {
 
   tid = malloc(sizeof(pthread_t) * numThread);
   Interval *threadData = malloc(sizeof(Interval) * numThread);
-
-  while (fscanf(fileIn, "\n") != EOF) {
+  printf("starting to read from file\n");
+  while (!feof(fileIn)) {
+    char content[] = "";
+    fscanf(fileIn, "%s\n",content);
     fileSize++;
+    printf("%d lines read from the file\n", fileSize);
   }
   fclose(fileIn);
   int *cost = malloc(sizeof(int) * fileSize);
   long int *timing = malloc(sizeof(long int) * numThread);
 
+  printf("reading data from file - %d lines\n", fileSize);
   fileIn = fopen(argv[2], "r");
   i = 0;
   while (fscanf(fileIn, "%d\n", &cost[i]) != EOF) {
     i++;
   }
-
+  fclose(fileIn);
+  printf("finished reading data from file\n");
   linesPer = ceil(fileSize/numThread);
 
   for (i = 0; i < numThread; i++) {
@@ -243,25 +210,30 @@ int main(int argc, char* argv[]) {
       // run merge sort
       pthread_create(&tid[i], NULL, MergeHelper, &threadData[i]);
     }
+    printf("Created thread %d\n", i);
   }
   for (i = 0; i < numThread; i++) {
-    pthread_join(tid[i], &timing[i]);
+    void* timingTemp = &timing[i];
+    pthread_join(tid[i], &timingTemp);
   }
+  printf("finished with threads\n");
   // find max, min, mean
   findMin(timing, numThread);
   findMax(timing, numThread);
   findMean(timing, numThread);
+  printf("sorting thrirds of imformation\n");
   // sort thirds
   BruteForceSort(cost, fileSize / 3);
   BubbleSort((cost + (fileSize / 3)), (fileSize * 2) / 3);
   MergeSort(cost, (fileSize * 2) / 3, fileSize);
   // merge thirds
+  printf("merging three sections\n");
   MergeSort(cost, 0, fileSize);
+  printf("finished merging... Printing to outputFile\n");
   // write file to fileOut
   for (i = 0; i < fileSize; i++) {
     fprintf(fileOut, "%d\n", cost[i]);
   }
-  fclose(fileIn);
   fclose(fileOut);
   free(threadData);
   free(cost);
