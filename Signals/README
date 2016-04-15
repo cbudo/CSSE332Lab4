@@ -1,0 +1,12 @@
+Copyright 2016 by Chris Budo and Alia Robinson
+
+SIGNALS
+
+This program handles commands input by the user through the use of signal handlers. 
+
+To run the "signals" program, provide one command-line argument: the username of the computer and login with which the program is being run. This will be used to execute the ps command. 
+
+Pressing Ctrl+C will send a SIGINT signal, which will cause the program to quit.
+The program also supports the ps command and the kill command. Entering ps will display a list of processes. Entering the word "kill" followed by the id of a process will terminate the process. 
+
+In addition to responding to signals, the program will also trigger an alarm signal every 5 seconds. The handler prints out a "Beep" to notify the user of an alarm signal. 

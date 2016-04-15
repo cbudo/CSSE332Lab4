@@ -1,0 +1,29 @@
+Copyright 2016 by Chris Budo and Alia Robinson
+
+THREADS
+
+This multithreaded program sorts integer values from an input file in ascending order. The program uses three different sorting algorithms: Bubble Sort, Merge Sort, and "Brute Force" sort. A makefile is included to compile this program.
+
+To run the "threads" program, you must provide three command-line arguments in the following order:
+1. The number of threads to create, and integer value
+2. The name of an input file containing newline-separated integer values
+3. The name of an output file
+
+The output file will contain the input values in sorted order. 
+
+Timing Results
+--------------
+n=3:
+Min = 539us
+Max = 32826us
+Mean = 20797us
+
+n=5:
+Min = 293us
+Max = 11565us
+Mean = 5614us
+
+n=15:
+Min = 2us
+Max = 2192us
+Mean = 465us
